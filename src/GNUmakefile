@@ -51,6 +51,8 @@ hs_so_libs = \
 programs = \
 #	programs/
 
+targets = $(hs_a_libs) $(programs)
+
 
 %.o: %.hs
 	$(HC) $(HFLAGS) -c -o $@ $<
@@ -61,8 +63,7 @@ programs = \
 %: %.hs $(hs_a_libs)
 	$(HC) $(HFLAGS) -o $@ $(library_options) $(hs_a_libs) $<
 
-all: $(hs_a_libs) $(programs)
-
+all: $(targets)
 
 info:
 	@echo ghc_version=$(ghc_version)
@@ -72,8 +73,14 @@ info:
 	@echo library_options=$(library_options)
 	@echo libTaPL_sources=$(libTaPL_sources)
 
+clean:
+	find Arithmetic programs \( -name '*.hi' -o -name '*.o' \) -exec rm -f {} \;
+	rm -f $(targets)
+
 lint:
-	hlint --utf8 --color Asahi programs
+	hlint --utf8 --color Arithmetic programs
+
+build: clean all lint
 
 $(libTaPL_a): $(libTaPL_objs)
 	ar -r $@ $^

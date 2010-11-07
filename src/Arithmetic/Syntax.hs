@@ -83,8 +83,18 @@ ex1 :: Term
 ex1 = if' (isZero (pred' (succ' zero))) true (if' false false false)
 
 test1 :: Term
-test1 =  eval ex0
+test1 =  eval ex1
 
+
+-- if (iszero (pred (succ zero))) then (succ (pred (succ zero))) else (if false then false else false)
+ex2 :: Term
+ex2 = if'
+      (isZero (pred' (succ' zero)))
+      (succ' (pred' (succ' zero)))
+      (if' false false false)
+
+test2 :: Term
+test2 =  eval ex2
 
 
 {--
