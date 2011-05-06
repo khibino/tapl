@@ -4,7 +4,8 @@ HFLAGS = -Wall
 libTaPL_sources = \
 	Arithmetic/Syntax.hs \
 	Lambda/Bruijn.hs \
-	Lambda/Syntax.hs
+	Lambda/Syntax/UnTyped.hs \
+##	Lambda/Syntax/Simple.hs
 
 
 libTaPL_objs = $(libTaPL_sources:.hs=.o)

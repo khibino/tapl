@@ -1,5 +1,9 @@
 
-module Lambda.Symtax where
+{-- Implementation of Chapter 7
+ -- An ML Implementation of Lambda Calculus
+ --}
+
+module Lambda.Syntax.UnTyped where
 
 data Info = Info ()
             

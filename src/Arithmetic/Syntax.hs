@@ -1,5 +1,9 @@
 {-# LANGUAGE PatternGuards #-}
 
+{-- Implementation of Chapter 4
+ -- An ML Implementation of Arithmetic Expressions
+ --}
+
 module Arithmetic.Syntax where
 
 import Data.Maybe
@@ -38,7 +42,7 @@ eval1 :: Term -> Maybe Term
 eval1 =  rec
   where rec (TmIf fi cond' then' else') | TmTrue  _ <- cond' = Just then'
                                         | TmFalse _ <- cond' = Just else'
-                                        | True               =
+                                        | otherwise          =
                                           cond'' >>= (\ c' -> Just $ TmIf fi c' then' else')
                                            where cond'' = rec cond'
 
