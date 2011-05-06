@@ -6,8 +6,6 @@
 
 module Arithmetic.Syntax where
 
-import Data.Maybe
-
 type Info = ()
 
 dummyInfo :: Info
@@ -20,7 +18,7 @@ data Term = TmTrue  Info
           | TmSucc Info Term
           | TmPred Info Term
           | TmIsZero Info Term
-            deriving Show
+          deriving (Show, Eq)
                      
 
 
@@ -57,10 +55,11 @@ eval1 =  rec
         rec (TmIsZero fi t)          = fmap (TmIsZero fi) t' where t' = rec t
         rec _                        = Nothing
 
-eval   :: Term -> Term
-eval t =  fromMaybe t (fmap eval t')
-  where t' = eval1 t
-
+eval  :: Term -> Term
+eval t = case eval1 t of
+  Just t' | t' /= t   -> eval t'
+          | otherwise -> t
+  Nothing             -> t
 
 true  = TmTrue  dummyInfo
 false = TmFalse dummyInfo
