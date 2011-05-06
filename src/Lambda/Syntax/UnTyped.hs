@@ -11,9 +11,7 @@ data Term = TmVar Info Int Int
           | TmAbs Info String Term
           | TmApp Info Term Term
 
-data NameBind = NameBind ()
-
-type Binding = NameBind
+data Binding = NameBind
 
 type Context = [(String, Binding)]
 
@@ -26,7 +24,7 @@ ctxLength =  length
 pickFreshName :: Context -> String -> (Context, String)
 pickFreshName ctx hint =
   case lookup hint ctx of
-    Nothing -> ((hint, NameBind ()) : ctx, hint)
+    Nothing -> ((hint, NameBind) : ctx, hint)
     Just _  -> pickFreshName ctx ("_" ++ hint)
 
 printTm :: Context -> Term -> IO ()
