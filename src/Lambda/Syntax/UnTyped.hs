@@ -5,11 +5,14 @@
 
 module Lambda.Syntax.UnTyped where
 
-data Info = Info ()
+import Data.Char
+
+data Info = Info deriving (Show, Eq)
             
 data Term = TmVar Info Int Int
           | TmAbs Info String Term
           | TmApp Info Term Term
+          deriving (Show, Eq)
 
 data Binding = NameBind
 
@@ -22,10 +25,11 @@ ctxLength :: Context -> Int
 ctxLength =  length
 
 pickFreshName :: Context -> String -> (Context, String)
-pickFreshName ctx hint =
+pickFreshName ctx hint@(h:hs) =
   case lookup hint ctx of
     Nothing -> ((hint, NameBind) : ctx, hint)
-    Just _  -> pickFreshName ctx ("_" ++ hint)
+    Just _  -> pickFreshName ctx (if h < 'k' then chr (ord h + 1) : hs else 'a' : hint)
+pickFreshName ctx "" = pickFreshName ctx "a"
 
 printTm :: Context -> Term -> IO ()
 printTm ctx = f
@@ -64,14 +68,85 @@ isVal :: Context -> Term -> Bool
 isVal _ (TmAbs _ _ _) = True
 isVal _ _             = False
 
-eval1 :: Context -> Term -> Term
+eval1 :: Context -> Term -> Maybe Term
 eval1 ctx = f
   where f (TmApp _  (TmAbs _ _ t12) v2) | isVal ctx v2 =
-          termSubstTop v2 t12
+          Just $ termSubstTop v2 t12
         f (TmApp fi v1 t2) | isVal ctx v1 =
-          let t2' = eval1 ctx t2 in TmApp fi v1 t2'
+          do t2' <- eval1 ctx t2
+             Just $ TmApp fi v1 t2'
         f (TmApp fi t1 t2) =
-          let t1' = eval1 ctx t1 in
-          TmApp fi t1' t2
-        f _                = error "No Rule Applies"
+          do t1' <- eval1 ctx t1
+             Just $ TmApp fi t1' t2
+        f _                = Nothing
 
+eval   :: Context -> Term -> Term
+eval ctx t = case eval1 ctx t of
+  Just t' | t' /= t   -> eval ctx t'
+          | otherwise -> t
+  Nothing             -> t
+
+
+eval' :: Term -> IO ()
+eval' =  (>> putChar '\n') . printTm [] . eval []
+
+var :: Int -> Int -> Term
+var   = TmVar Info
+
+abs' :: String -> Term -> Term
+abs'   = TmAbs Info
+
+app :: Term -> Term -> Term
+app   = TmApp Info
+
+ex0 :: Term
+ex0 =  app
+       (abs' "u" (app (var 0 1) (var 0 1)))
+       (app
+        (abs' "x" (app (var 0 1) (var 0 1)))
+        (app
+         (abs' "y" (app (var 0 1) (var 0 1)))
+         (abs' "z" (var 0 1))))
+
+test0 :: IO ()
+test0 =  eval' ex0
+
+true  = abs' "t" (abs' "f" (var 1 2))
+false = abs' "t" (abs' "f" (var 0 2))
+
+ifTerm =
+  abs' "l" (abs' "m" (abs' "n"
+                      (app
+                       (app
+                        (var 2 3)
+                        (var 1 3))
+                       (var 0 3))))
+
+if' :: Term -> Term -> Term -> Term
+if' p t e = app (app (app ifTerm p) t) e
+         
+zero = abs' "s" (abs' "z" (var 0 2))
+
+succTerm =
+  abs' "n" (abs' "s" (abs' "z"
+                      (app
+                       (var 1 3)
+                       (app
+                        (app (var 2 3) (var 1 3))
+                        (var 0 3)))))
+
+succ' :: Term -> Term
+succ' = app succTerm
+
+true, false, zero :: Term
+ifTerm, succTerm :: Term
+
+
+exOne :: Term
+exOne =  succ' zero
+
+ex1 :: Term
+ex1 =  if' false (succ' zero) (succ' (succ' zero))
+
+test1 :: IO ()
+test1 =  eval' ex1
